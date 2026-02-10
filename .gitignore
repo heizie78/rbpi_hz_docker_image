@@ -1,0 +1,15 @@
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+
+# Env files
+.env
+.env.*
+
+# Temporary files
+*.tmp
+*.swp
+*.bak

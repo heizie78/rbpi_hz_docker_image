@@ -1,0 +1,7 @@
+[Unit]
+Description=Scheduled system reboot
+Wants=reboot.timer
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/reboot

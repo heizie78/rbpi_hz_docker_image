@@ -1,0 +1,50 @@
+version: "3.9"
+
+# Raspberry Pi Docker stack:
+# - n8n on port 5678
+# - Home Assistant on host network (8123)
+# - Pi-hole DNS on 53 and Web UI on 8080
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      - /home/pi/rbpi-hz-docker-image/data/n8n:/home/node/.n8n
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - N8N_DIAGNOSTICS_ENABLED=true
+      - N8N_PERSONALIZATION_ENABLED=true
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /home/pi/rbpi-hz-docker-image/data/homeassistant:/config
+    environment:
+      - TZ=Europe/Berlin
+
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8080:80/tcp"
+    environment:
+      - TZ=Europe/Berlin
+      - WEBPASSWORD=changeme
+    volumes:
+      - /home/pi/rbpi-hz-docker-image/data/pihole:/etc/pihole
+      - /home/pi/rbpi-hz-docker-image/data/dnsmasq:/etc/dnsmasq.d
+    cap_add:
+      - NET_ADMIN
