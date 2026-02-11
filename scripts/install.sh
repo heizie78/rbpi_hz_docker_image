@@ -6,7 +6,8 @@ LOG_DIR="${BASE_DIR}/logs"
 LOG_FILE="${LOG_DIR}/install.log"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${REPO_ROOT}/docker-compose.yml"
-TOTAL_STEPS=12
+SYSTEM_CONFIG_LIB="${REPO_ROOT}/scripts/lib/system_config.sh"
+TOTAL_STEPS=11
 STEP=0
 
 # Progress indicator for console output.
@@ -87,21 +88,20 @@ if [[ ! -f "${COMPOSE_FILE}" ]]; then
   log "ERROR: docker-compose.yml not found in repo root."
   exit 1
 fi
+if [[ ! -f "${SYSTEM_CONFIG_LIB}" ]]; then
+  log "ERROR: shared system config library not found: ${SYSTEM_CONFIG_LIB}"
+  exit 1
+fi
+source "${SYSTEM_CONFIG_LIB}"
 
 # Install packages required for Docker installation and locale handling.
 step "Installing prerequisites (curl, ca-certificates, locales)"
 apt-get update -y
 apt-get install -y curl ca-certificates locales
 
-# Set system timezone.
-step "Setting timezone to Europe/Berlin"
-timedatectl set-timezone Europe/Berlin
-
-# Set system locale.
-step "Setting locale to de_DE.UTF-8"
-sed -i 's/^# *\(de_DE.UTF-8 UTF-8\)/\1/' /etc/locale.gen
-locale-gen
-update-locale LANG=de_DE.UTF-8
+# Interactive system settings (static IP, hostname, timezone, locale).
+step "Configuring system settings (interactive)"
+run_interactive_system_configuration
 
 # Install Docker using the official convenience script.
 step "Installing Docker via official script"

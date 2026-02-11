@@ -11,6 +11,14 @@ It also configures timezone/locale and installs a scheduled reboot timer.
 - Raspberry Pi OS (latest recommended)
 - User `pi`
 - Internet access during installation
+- This public repository must be cloned on the Raspberry Pi before running scripts
+
+Example:
+```bash
+cd /home/pi
+git clone https://github.com/<your-org-or-user>/rbpi_hz_docker_image.git
+cd rbpi_hz_docker_image
+```
 
 ## What gets installed
 - Docker Engine (official `get.docker.com` script)
@@ -39,6 +47,11 @@ Run as root:
 sudo ./scripts/install.sh
 ```
 
+The install script asks interactively whether to:
+- configure static IPv4 for `eth0` and/or `wlan0` (default IP is current interface IP)
+- change hostname (default is current hostname)
+- change timezone/locale (defaults: `Europe/Berlin`, `de_DE.UTF-8`)
+
 ## Update
 Interactive mode:
 ```bash
@@ -60,6 +73,8 @@ Auto-no mode (skips all updates, keeps reboot timer unchanged):
 sudo ./scripts/update.sh --no
 ```
 
+In non-interactive update modes (`--non-interactive`, `--yes`, `--no`), static IP, hostname, timezone and locale are not changed.
+
 ## Reboot schedule
 The reboot timer is a systemd timer:
 - Service: `reboot.service`
@@ -70,6 +85,7 @@ The update script can change the schedule interactively.
 ## Notes
 - After installation, user `pi` is added to the `docker` group. A logout/login is required for this to take effect.
 - Pi-hole default web password is set in `docker-compose.yml` as `WEBPASSWORD=changeme`. Change it before use.
+- Install/update scripts use local files from this repo (`docker-compose.yml`, `systemd/*`), so the repo path must exist on the Raspberry Pi.
 
 ## Troubleshooting
 - Check install/update logs in `/home/pi/rbpi-hz-docker-image/logs/`

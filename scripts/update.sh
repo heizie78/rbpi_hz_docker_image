@@ -7,7 +7,8 @@ LOG_FILE="${LOG_DIR}/update.log"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${REPO_ROOT}/docker-compose.yml"
 TIMER_FILE="/etc/systemd/system/reboot.timer"
-TOTAL_STEPS=9
+SYSTEM_CONFIG_LIB="${REPO_ROOT}/scripts/lib/system_config.sh"
+TOTAL_STEPS=10
 STEP=0
 NON_INTERACTIVE=0
 AUTO_YES=0
@@ -136,11 +137,24 @@ if [[ ! -f "${COMPOSE_FILE}" ]]; then
   log "ERROR: docker-compose.yml not found in repo root."
   exit 1
 fi
+if [[ ! -f "${SYSTEM_CONFIG_LIB}" ]]; then
+  log "ERROR: shared system config library not found: ${SYSTEM_CONFIG_LIB}"
+  exit 1
+fi
+source "${SYSTEM_CONFIG_LIB}"
 
 # Ensure Docker and Docker Compose are available.
 step "Checking Docker availability"
 command -v docker >/dev/null 2>&1 || { log "ERROR: docker not found."; exit 1; }
 docker compose version >/dev/null 2>&1 || { log "ERROR: docker compose plugin not found."; exit 1; }
+
+# Interactive system settings are skipped for non-interactive modes.
+step "Configuring system settings (interactive)"
+if [[ "${NON_INTERACTIVE}" -eq 0 ]]; then
+  run_interactive_system_configuration
+else
+  log "Non-interactive mode: static IP/hostname/timezone/locale unchanged."
+fi
 
 # Docker engine updates are checked in interactive mode or --yes mode.
 step "Checking Docker engine updates (interactive/--yes)"
